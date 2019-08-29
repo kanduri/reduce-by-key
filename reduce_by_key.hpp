@@ -1,11 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "cuda_atomic.hpp"
-#include "cuda_common.hpp"
-
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+#include "gpu_atomic.hpp"
 
 namespace arb {
 namespace gpu {
@@ -77,7 +73,7 @@ void reduce_by_key(T contribution, T* target, I i, unsigned mask) {
 
     if(run.is_root) {
         // The update must be atomic, because the run may span multiple warps.
-        cuda_atomic_add(target+i, contribution);
+        GPU_atomic_add(target+i, contribution);
     }
 }
 

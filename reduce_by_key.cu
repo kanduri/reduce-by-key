@@ -1,7 +1,7 @@
+#include <vector>
+
 #include "gtest/gtest.h"
 
-#include <vector>
-#include "device_vector.cuh"
 #include "reduce_by_key.hpp"
 #include "util/span.hpp"
 #include "util/rangeutil.hpp"
@@ -28,24 +28,24 @@ std::vector<T> reduce(const std::vector<T>& in, size_t n_out, const std::vector<
 
     // allocate memory on device the size of in (src), index(idx) and n(dst)
     T *src;
-    cudaMalloc((void**) &src, sizeof(T)*in.size());
+    GPU_CALL(Malloc(&src, sizeof(T)*in.size()));
 
     int *idx;
-    cudaMalloc((void**) &idx, sizeof(int)*index.size());
+    GPU_CALL(Malloc(&idx, sizeof(int)*index.size()));
 
     T *dst;
-    cudaMalloc((void**) &dst, sizeof(T)*n_out);
+    GPU_CALL(Malloc(&dst, sizeof(T)*n_out));
 
     // copy the data from the host to device
 
-    cudaMemcpy(src, in.data(), sizeof(T)*in.size(), cudaMemcpyHostToDevice);
-    cudaMemcpy(idx, index.data(), sizeof(int)*index.size(), cudaMemcpyHostToDevice);
+    GPU_CALL(Memcpy(src, in.data(), sizeof(T)*in.size(), GPU(MemcpyHostToDevice)));
+    GPU_CALL(Memcpy(idx, index.data(), sizeof(int)*index.size(), GPU(MemcpyHostToDevice)));
 
     unsigned grid_dim = (n-1)/block_dim + 1;
     reduce_kernel<<<grid_dim, block_dim>>>(src, dst, idx, n);
 
     std::vector<T> out(n_out);
-    cudaMemcpy(out.data(), dst, sizeof(T)*n_out, cudaMemcpyDeviceToHost);
+    GPU_CALL(Memcpy(out.data(), dst, sizeof(T)*n_out, GPU(MemcpyDeviceToHost)));
 
     return out;
 }
@@ -136,26 +136,26 @@ std::vector<T> reduce_twice(const std::vector<T>& in, size_t n_out, const std::v
 
     // allocate memory on device the size of in (src), index(idx) and n(dst)
     T *src;
-    cudaMalloc((void**) &src, sizeof(T)*in.size());
+    GPU_CALL(Malloc(&src, sizeof(T)*in.size()));
 
     int *idx;
-    cudaMalloc((void**) &idx, sizeof(int)*index.size());
+    GPU_CALL(Malloc(&idx, sizeof(int)*index.size()));
 
     T *dst;
-    cudaMalloc((void**) &dst, sizeof(T)*n_out);
+    GPU_CALL(Malloc(&dst, sizeof(T)*n_out));
 
     int n = in.size();
 
     // copy the data from the host to device
 
-    cudaMemcpy(src, in.data(), sizeof(T)*in.size(), cudaMemcpyHostToDevice);
-    cudaMemcpy(idx, index.data(), sizeof(int)*index.size(), cudaMemcpyHostToDevice);
+    GPU_CALL(Memcpy(src, in.data(), sizeof(T)*in.size(), GPU(MemcpyHostToDevice)));
+    GPU_CALL(Memcpy(idx, index.data(), sizeof(int)*index.size(), GPU(MemcpyHostToDevice)));
 
     unsigned grid_dim = (n-1)/block_dim + 1;
     reduce_twice_kernel<<<grid_dim, block_dim>>>(src, dst, idx, n);
 
     std::vector<T> out(n_out);
-    cudaMemcpy(out.data(), dst, sizeof(T)*n_out, cudaMemcpyDeviceToHost);
+    GPU_CALL(Memcpy(out.data(), dst, sizeof(T)*n_out, GPU(MemcpyDeviceToHost)));
 
     return out;
 }

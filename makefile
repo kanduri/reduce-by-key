@@ -1,5 +1,8 @@
-rbk : reduce_by_key.cu
-	nvcc -std=c++14 -g $^ gtest/libgtest.a -o rbk
+cuda :
+	make -f makefile.cuda
+
+hip :
+	make -f makefile.hip
 
 clean :
 	rm -f rbk
